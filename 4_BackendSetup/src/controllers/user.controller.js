@@ -2,6 +2,7 @@ import asyncHandler from '../utils/asyncHandler.js'
 import ApiError from '../utils/ApiError.js';
 import {User} from '../models/user.models.js'
 import cloudinaryFileUpload from '../utils/cloudinary.js';
+import ApiResponse from '../utils/ApiResponse.js';
 
 const registerUser = asyncHandler(async(req, res)=>{
      // res.status(200).json({
@@ -62,10 +63,39 @@ const registerUser = asyncHandler(async(req, res)=>{
 
 
 //   5.upload the images and avatar on cloudinary
-     await cloudinaryFileUpload(avatarLocalPath);
-     if(coverImageLocalPath){
-          await cloudinaryFileUpload(coverImageLocalPath);
+     const avatar = await cloudinaryFileUpload(avatarLocalPath);
+     // if(coverImageLocalPath){
+     const coverImage = await cloudinaryFileUpload(coverImageLocalPath);
+     // }
+
+     if(!avatar){
+          throw new ApiError(400, "Avatar file is required");
      }
+
+
+//   6.create user object -> upload it on DB
+     const user = await User.create({
+          fullName,
+          avatar : avatar.url,
+          coverImage : coverImage?.url || "",
+          email,
+          password,
+          userName : userName.toLowerCase(),
+     })
+
+
+//   7. remove the password and refreshtoken from response of alias
+     const userCreated = await User.findById(user._id).select("-password -refreshToken")
+
+
+//   8. Check for user creation
+     if(userCreated){
+          throw new ApiError(500, "Something went wrong while registering user")
+     }
+
+     return res.status(200).json(
+          new ApiResponse(201, userCreated, "User Registed Successfully")
+     )
 
 
 
