@@ -1,5 +1,5 @@
 import {v2 as cloudinary} from 'cloudinary'
-import {fs} from 'fs'
+import fs, { fchmod } from 'fs'
 
 cloudinary.config({
      cloud_name : process.env.CLOUDINARY_CLOUD_NAME,
@@ -18,8 +18,12 @@ const cloudinaryFileUpload = async(LocalFilePath) => {
 
           // file uploaded successfully
           console.log("File have uploaded successfully",response.url);
+          fs.unlinkSync(LocalFilePath);
+          return response;
      }catch(error){
-          fs.unlink(LocalFilePath) // this will remove the temporary stored file from the server as the upload is failed.
+          // Remove the temporary stored file from the server as the upload has failed.
+          fs.unlinkSync(LocalFilePath);
+        
           return null;         
      }
 }
