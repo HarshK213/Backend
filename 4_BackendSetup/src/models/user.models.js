@@ -63,6 +63,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 }
 
 userSchema.methods.generateAccessToken = function(){
+     // console.log("Inside Access token")
      return jwt.sign(
           {
                id : this.id,
@@ -72,19 +73,20 @@ userSchema.methods.generateAccessToken = function(){
           },
           process.env.ACCESS_TOKEN_SECRET,
           {
-               expiredIn : process.env.ACCESS_TOKEN_EXPIRY
+               expiresIn : process.env.ACCESS_TOKEN_EXPIRY
           }
      )
 }
 
 userSchema.methods.generateRefreshToken = function(){
+     // console.log("Inside refresh token")
      return jwt.sign(
           {
-               id : this.id,Z
+               id : this.id,
           },
           process.env.REFRESH_TOKEN_SECRET,
           {
-               expiredIn : process.env.REFRESHQQ_TOKEN_EXPIRY
+               expiresIn : process.env.REFRESH_TOKEN_EXPIRY
           }
      )
 }

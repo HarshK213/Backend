@@ -7,8 +7,10 @@ import ApiResponse from '../utils/ApiResponse.js';
 const generateAccessandRefreshTokens = async(userId) => {
      try{
           const user = await User.findById(userId);
+          // console.log(user);
           const accessToken = user.generateAccessToken();
           const refreshToken = user.generateRefreshToken();
+          // console.log("after refresh token")
 
           user.refreshToken = refreshToken;
           await user.save({validateBeforeSave : false})
@@ -143,7 +145,7 @@ const loginUser = asyncHandler(async(req, res) => {
      const {userName, email, password} = req.body;
 
 //   2. check wheather it is filled or not
-     if(!userName || !email){
+     if(!(userName || email)){
           throw new ApiError(400, "Username or Email is required.");
      }
 
@@ -164,7 +166,7 @@ const loginUser = asyncHandler(async(req, res) => {
 
      const {accessToken, refreshToken} = await generateAccessandRefreshTokens(user._id);
 
-     const loggedInUser = User.findById(user._id).select("-password -refreshToken");
+     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
      const options = {
           httpOnly : true,
