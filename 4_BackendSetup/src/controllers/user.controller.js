@@ -4,6 +4,22 @@ import {User} from '../models/user.models.js'
 import cloudinaryFileUpload from '../utils/cloudinary.js';
 import ApiResponse from '../utils/ApiResponse.js';
 
+const generateAccessandRefreshTokens = async(userId) => {
+     try{
+          const user = await User.findById(userId);
+          const accessToken = user.generateAccessToken();
+          const refreshToken = user.generateRefreshToken();
+
+          user.refreshToken = refreshToken;
+          await user.save({validateBeforeSave : false})
+
+          return {accessToken, refreshToken};
+
+     }catch(error){
+          throw new ApiError(500, "Something went wrong while generating access and refresh tokens")
+     }
+}
+
 const registerUser = asyncHandler(async(req, res)=>{
      // res.status(200).json({
      //      message : "Hello World",
@@ -25,7 +41,7 @@ const registerUser = asyncHandler(async(req, res)=>{
 
 //   1.get info from user(FRONTEND)
      const { userName, email, fullName, password } = req.body;
-     console.log("Email : ", email);
+     // console.log("Email : ", email);
 
 
 //   2.check wheather the info is correctly filled
@@ -109,4 +125,120 @@ const registerUser = asyncHandler(async(req, res)=>{
 
 })
 
-export default registerUser;
+const loginUser = asyncHandler(async(req, res) => {
+/*
+
+     Steps for login : 
+          - take email or username and password from user.
+          - check wheather it is filled or not
+          - check if user exist or not
+          - verify password
+          - generate tokens
+          - send cookies
+          - return the response
+
+*/
+
+//   1. take data from the req body
+     const {userName, email, password} = req.body;
+
+//   2. check wheather it is filled or not
+     if(!userName || !email){
+          throw new ApiError(400, "Username or Email is required.");
+     }
+
+//   3. check if user exist
+     const user = await User.findOne({
+          $or : [{userName}, {email}]
+     })
+
+     if(!user){
+          throw new ApiError(404, "User not exist.")
+     }
+
+     const ispasscorrect = await user.isPasswordCorrect(password);
+
+     if(!ispasscorrect){
+          throw new ApiError(401, "Password is incorrect.")
+     }
+
+     const {accessToken, refreshToken} = await generateAccessandRefreshTokens(user._id);
+
+     const loggedInUser = User.findById(user._id).select("-password -refreshToken");
+
+     const options = {
+          httpOnly : true,
+          secure : true,
+     }
+
+     return res
+     .status(200)
+     .cookie("accessToken", accessToken, options)
+     .cookie("refreshToken", refreshToken, options)
+     .json(
+          new ApiResponse(
+               200,
+               {
+                    user : loggedInUser, accessToken, refreshToken
+               },
+               "User logged in Successfully"
+          )
+     )
+
+
+})
+
+const logout = asyncHandler(async(req, res) => {
+/*
+     Steps for logout:
+          - clear cookies
+          - clear tokens
+
+          for this we have to find user, that can be done if we have id of user.
+          but how to find id??
+          as unlike login we dont have username , email, and pass
+          
+
+*/
+
+//   after getting user from verifyJWT middlware.
+
+
+//   clear Tokens
+     await User.findByIdAndUpdate(
+          req.user._id,
+          {
+               $set : {
+                    refreshToken : undefined
+               }
+          },
+          {
+               new : true,
+          }
+     )
+
+
+//   clear cookie
+     const options = {
+          httpOnly : true,
+          secure : true,
+     }
+
+     return res
+     .status(200)
+     .clearCookie("accessToken", options)
+     .clearCookie("refreshToken", options)
+     .json(
+          new ApiResponse(
+               200,
+               {},
+               "User Logged out successfully"
+          )
+     )
+})
+
+export {
+     registerUser,
+     loginUser,
+     logout
+};
