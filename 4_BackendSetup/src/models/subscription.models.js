@@ -4,7 +4,7 @@ import { User } from "./user.models";
 const subscriptionSchema = new mongoose.Schema(
      {
           subscriber : {
-               type : mongoose.Schema.Types.ObjectId;
+               type : mongoose.Schema.Types.ObjectId,
                ref : User,
           },
           channel : {
