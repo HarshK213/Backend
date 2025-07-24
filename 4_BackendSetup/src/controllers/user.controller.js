@@ -4,8 +4,6 @@ import {User} from '../models/user.models.js'
 import cloudinaryFileUpload from '../utils/cloudinary.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken'
-import { log } from 'console';
-
 
 const generateAccessandRefreshTokens = async(userId) => {
      try{
@@ -370,6 +368,76 @@ const updateUserDetails = asyncHandler(async(req, res) => {
 
 })
 
+const updateUserAvatar = asyncHandler(async(req, res) => {
+     
+     const AvatarLocalPath = req.file?.path;
+     
+     if(!AvatarLocalPath){
+          throw new ApiError(400, "Avatar file is missing")
+     }
+
+     const avatar = await cloudinaryFileUpload(avatarLocalPath);
+
+     if(!avatar){
+          throw new ApiError(400, "Error white generating Avatar Link")
+     }
+
+     const user = await User.findByIdAndUpdate(
+          req.user?._id,
+          {
+               $set:{
+                    avatar
+               }
+          },
+          {
+               new : true,
+          }
+     ).select("-password")
+
+     return res
+     .status(200)
+     .json(new ApiResponse(
+          200,
+          {user},
+          "User Avatar Updated Successfully"
+     ))
+})
+
+const updateUserCoverImage = asyncHandler(async(req, res) => {
+     
+     const CoverImageLocalPath = req.file?.path;
+     
+     if(!CoverImageLocalPath){
+          throw new ApiError(400, "cover image file is missing")
+     }
+
+     const coverImage = await cloudinaryFileUpload(CoverImageLocalPath);
+
+     if(!coverImage){
+          throw new ApiError(400, "Error white generating cover image Link")
+     }
+
+     const user = await User.findByIdAndUpdate(
+          req.user?._id,
+          {
+               $set:{
+                    coverImage
+               }
+          },
+          {
+               new : true,
+          }
+     ).select("-password")
+
+     return res
+     .status(200)
+     .json(new ApiResponse(
+          200,
+          {user},
+          "User cover image Updated Successfully"
+     ))
+})
+
 export {
      registerUser,
      loginUser,
@@ -377,5 +445,7 @@ export {
      refreshAccessToken,
      changeCurrentPassword,
      getCurrUser,
-     updateUserDetails
+     updateUserDetails,
+     updateUserAvatar,
+     updateUserCoverImage
 };
