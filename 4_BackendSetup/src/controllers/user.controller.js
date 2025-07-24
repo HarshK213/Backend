@@ -4,6 +4,7 @@ import {User} from '../models/user.models.js'
 import cloudinaryFileUpload from '../utils/cloudinary.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken'
+import { log } from 'console';
 
 
 const generateAccessandRefreshTokens = async(userId) => {
@@ -221,6 +222,8 @@ const logout = asyncHandler(async(req, res) => {
           }
      )
 
+     // console.log(req.user._id)
+
 
 //   clear cookie
      const options = {
@@ -286,9 +289,93 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
      }
 })
 
+const changeCurrentPassword = asyncHandler(async(req, res) => {
+     const {oldPassword, newPassword, confPassword} = req.body;
+
+     // console.log(oldPassword);
+     // console.log(newPassword);
+
+     if(newPassword !== confPassword){
+          throw new ApiError(401, "New Password and Confirm Password are not same.")
+     }
+
+     const user = await User.findById(req.user._id);
+     console.log(req.user._id)
+
+
+     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+     if(!isPasswordCorrect){
+          throw new ApiError(400, "Given Password is incorrect");
+     }
+
+     user.password = newPassword;
+     user.save({validateBeforeSave : false});
+
+     // console.log(user.password)
+
+     return res
+     .status(200)
+     .json(new ApiResponse(200, {}, "Password Changed Successfully"));
+
+})
+
+const getCurrUser = asyncHandler(async(req, res) => {
+     const user = await User.findById(req.user._id);
+     
+     if(!user){
+          throw new ApiError(404, "User not logged in.");
+     }
+
+     return res
+     .status(200)
+     .json(new ApiResponse(
+          200,
+          {
+               user,
+          },
+          "Current User get Successfully"
+     ))
+})
+
+const updateUserDetails = asyncHandler(async(req, res) => {
+     const {fullName, email} = req.body;
+
+     if(!fullName || !email){
+          throw new ApiError(401, "All fields are required")
+     }
+
+     const user = await User.findByIdAndUpdate(
+          req.user?._id,
+          {
+               $set : {
+                    fullName,
+                    email
+               }
+          },
+          {
+               new : true
+          }
+     ).select("-password")
+
+     console.log(user)
+
+     return res
+     .status(200)
+     .json(new ApiResponse(
+          200,
+          {user},
+          "User Details are Updated Successfully"
+     ))
+
+})
+
 export {
      registerUser,
      loginUser,
      logout,
-     refreshAccessToken
+     refreshAccessToken,
+     changeCurrentPassword,
+     getCurrUser,
+     updateUserDetails
 };

@@ -66,7 +66,7 @@ userSchema.methods.generateAccessToken = function(){
      // console.log("Inside Access token")
      return jwt.sign(
           {
-               id : this.id,
+               _id : this._id,
                email : this.email,
                userName : this.userName,
                fullName : this.fullName
