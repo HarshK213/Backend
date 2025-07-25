@@ -33,23 +33,23 @@ router.route("/update-user-detail").post(verifyJWT, updateUserDetails);
 
 router.route("/update-user-avatar").post(
      verifyJWT, 
-     upload.field(
+     upload.fields([
           {
                name : "avatar",
                maxCount : 1
           }
-     ),
+     ]),
      updateUserAvatar
 )
 
 router.route("/update-user-coverImage").post(
      verifyJWT, 
-     upload.field(
+     upload.fields([
           {
                name : "coverImage",
                maxCount : 1
           }
-     ),
+     ]),
      updateUserCoverImage
 )
 

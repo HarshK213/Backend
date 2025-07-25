@@ -1,7 +1,7 @@
 import asyncHandler from '../utils/asyncHandler.js'
 import ApiError from '../utils/ApiError.js';
 import {User} from '../models/user.models.js'
-import cloudinaryFileUpload from '../utils/cloudinary.js';
+import {cloudinaryFileUpload, cloudinaryFileDelete} from '../utils/cloudinary.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken'
 
@@ -21,6 +21,10 @@ const generateAccessandRefreshTokens = async(userId) => {
      }catch(error){
           throw new ApiError(500, "Something went wrong while generating access and refresh tokens")
      }
+}
+
+const retrivePublicId = (imageURL) => {
+     return imageURL.split('/').pop().split('.')[0];
 }
 
 const registerUser = asyncHandler(async(req, res)=>{
@@ -370,23 +374,32 @@ const updateUserDetails = asyncHandler(async(req, res) => {
 
 const updateUserAvatar = asyncHandler(async(req, res) => {
      
-     const AvatarLocalPath = req.file?.path;
+     // const AvatarLocalPath = req.file?.path;\
+     const AvatarLocalPath = req.files?.avatar[0]?.path
+
      
      if(!AvatarLocalPath){
           throw new ApiError(400, "Avatar file is missing")
      }
 
-     const avatar = await cloudinaryFileUpload(avatarLocalPath);
+     const avatar = await cloudinaryFileUpload(AvatarLocalPath);
 
      if(!avatar){
           throw new ApiError(400, "Error white generating Avatar Link")
      }
 
+// Deleting old image form cloudinary
+     const oldAvatarLink = req.user?.avatar;
+
+     const oldPulicId = retrivePublicId(oldAvatarLink);
+
+     await cloudinaryFileDelete(oldPulicId);
+
      const user = await User.findByIdAndUpdate(
           req.user?._id,
           {
                $set:{
-                    avatar
+                    avatar : avatar.url
                }
           },
           {
@@ -405,7 +418,9 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
 
 const updateUserCoverImage = asyncHandler(async(req, res) => {
      
-     const CoverImageLocalPath = req.file?.path;
+     const CoverImageLocalPath = req.files?.coverImage[0]?.path;
+
+     console.log(CoverImageLocalPath)
      
      if(!CoverImageLocalPath){
           throw new ApiError(400, "cover image file is missing")
@@ -417,11 +432,18 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
           throw new ApiError(400, "Error white generating cover image Link")
      }
 
+     // Deleting old image form cloudinary
+     const oldCoverImageLink = req.user?.coverImage;
+
+     const oldPulicId = retrivePublicId(oldCoverImageLink);
+
+     await cloudinaryFileDelete(oldPulicId);
+
      const user = await User.findByIdAndUpdate(
           req.user?._id,
           {
                $set:{
-                    coverImage
+                    coverImage : coverImage.url
                }
           },
           {
