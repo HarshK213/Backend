@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import {loginUser, logout, registerUser, refreshAccessToken, changeCurrentPassword, getCurrUser, updateUserDetails, updateUserAvatar, updateUserCoverImage } from '../controllers/user.controller.js';
+import {loginUser, logout, registerUser, refreshAccessToken, changeCurrentPassword, getCurrUser, updateUserDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory } from '../controllers/user.controller.js';
 import { upload } from '../middlewares/multer.middelware.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -27,30 +27,24 @@ router.route("/refresh-token").post(refreshAccessToken);
 
 router.route("/change-password").post(verifyJWT, changeCurrentPassword);
 
-router.route("/get-curr-user").post(verifyJWT, getCurrUser);
+router.route("/get-curr-user").get(verifyJWT, getCurrUser);
 
-router.route("/update-user-detail").post(verifyJWT, updateUserDetails);
+router.route("/update-user-detail").patch(verifyJWT, updateUserDetails);
 
-router.route("/update-user-avatar").post(
+router.route("/update-user-avatar").patch(
      verifyJWT, 
-     upload.fields([
-          {
-               name : "avatar",
-               maxCount : 1
-          }
-     ]),
+     upload.single("avatar"),
      updateUserAvatar
 )
 
-router.route("/update-user-coverImage").post(
+router.route("/update-user-coverImage").patch(
      verifyJWT, 
-     upload.fields([
-          {
-               name : "coverImage",
-               maxCount : 1
-          }
-     ]),
+     upload.single("coverImage"),
      updateUserCoverImage
 )
+
+router.route("/c/:userName").get(verifyJWT, getUserChannelProfile)
+
+router.route("/history").get(verifyJWT, getWatchHistory)
 
 export default router; 

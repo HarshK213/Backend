@@ -375,27 +375,22 @@ const updateUserDetails = asyncHandler(async(req, res) => {
 
 const updateUserAvatar = asyncHandler(async(req, res) => {
      
-     // const AvatarLocalPath = req.file?.path;\
-     const AvatarLocalPath = req.files?.avatar[0]?.path
-
-     
+     const AvatarLocalPath = req.file?.path;
+     console.log(AvatarLocalPath);
      if(!AvatarLocalPath){
           throw new ApiError(400, "Avatar file is missing")
      }
-
      const avatar = await cloudinaryFileUpload(AvatarLocalPath);
-
      if(!avatar){
           throw new ApiError(400, "Error white generating Avatar Link")
      }
 
 // Deleting old image form cloudinary
      const oldAvatarLink = req.user?.avatar;
-
      const oldPulicId = retrivePublicId(oldAvatarLink);
-
      await cloudinaryFileDelete(oldPulicId);
 
+// updating avatar link in user data
      const user = await User.findByIdAndUpdate(
           req.user?._id,
           {
@@ -418,28 +413,24 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
 })
 
 const updateUserCoverImage = asyncHandler(async(req, res) => {
-     
-     const CoverImageLocalPath = req.files?.coverImage[0]?.path;
-
+          
+     const CoverImageLocalPath = req.file?.path;
+     // const CoverImageLocalPath = req.files?.coverImage?.[0]?.path;
      console.log(CoverImageLocalPath)
-     
      if(!CoverImageLocalPath){
-          throw new ApiError(400, "cover image file is missing")
+          throw new ApiError(400, "Cover Image file is missing")
      }
-
      const coverImage = await cloudinaryFileUpload(CoverImageLocalPath);
-
      if(!coverImage){
-          throw new ApiError(400, "Error white generating cover image Link")
+          throw new ApiError(400, "Error white generating Avatar Link")
      }
 
-     // Deleting old image form cloudinary
+// Deleting old image form cloudinary
      const oldCoverImageLink = req.user?.coverImage;
-
      const oldPulicId = retrivePublicId(oldCoverImageLink);
-
      await cloudinaryFileDelete(oldPulicId);
 
+// updating avatar link in user data
      const user = await User.findByIdAndUpdate(
           req.user?._id,
           {
@@ -596,5 +587,6 @@ export {
      updateUserDetails,
      updateUserAvatar,
      updateUserCoverImage,
-     getUserChannelProfile
+     getUserChannelProfile,
+     getWatchHistory,
 };
