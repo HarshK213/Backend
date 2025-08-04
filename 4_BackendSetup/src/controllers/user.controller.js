@@ -101,7 +101,10 @@ const registerUser = asyncHandler(async(req, res)=>{
      // console.log(coverImage)
 
      if(!avatar){
-          throw new ApiError(400, "Avatar file is required");
+          throw new ApiError(400, "something went wrong while uploading avatar");
+     }
+     if(!coverImage){
+          throw new ApiError(400, "something went wrong while uploading coverImage");
      }
 
 
