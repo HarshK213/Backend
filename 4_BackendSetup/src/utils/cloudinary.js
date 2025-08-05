@@ -28,13 +28,13 @@ const cloudinaryFileUpload = async(LocalFilePath) => {
      }
 }
 
-const cloudinaryFileDelete = async(PublicId) => {
+const cloudinaryFileDelete = async(PublicId, type = 'image') => {
      try{
           if(!PublicId){
                return null;
           }
 
-          const response = await cloudinary.uploader.destroy(PublicId);
+          const response = await cloudinary.uploader.destroy(PublicId, {resource_type : type});
           console.log("Old File Deleted Successfully")
           return response;
           

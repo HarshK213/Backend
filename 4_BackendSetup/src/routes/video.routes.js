@@ -18,4 +18,8 @@ router.route("/upload").post(verifyJWT, upload.fields([
 
 router.route("/v/:videoId").get(getVideoById);
 
+router.route("/u/:videoId").patch(upload.single('thumbnail'), updateVideo);
+
+router.route("/del/:videoId").delete(deleteVideo);
+
 export default router;
